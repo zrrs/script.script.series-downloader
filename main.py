@@ -17,6 +17,7 @@
 # import xbmcvfs
 from webfactory import *
 import configparser
+import base64
 
 #----------------------------------------------------------------------
 # Variables de configuracion
@@ -24,19 +25,18 @@ import configparser
 config = configparser.ConfigParser()
 config.read('config.ini')
 
-#Directorios fuente y destino.
 selected_web = config.get("Web","selected_web")
 user = config.get("Web","user")
-password = config.get("Web","password")
+password = base64.b64decode(config.get("Web","password"))
 
 
-web =  webFactory.createWeb(selected_web)
-web.setUser(user)
-web.setPass(password)
+web =  webFactory.createWeb(selected_web,user,password)
 episodes = web.getEpisodesForDownload()
 
-for serie in episodes:
-    print '{tvserie} has the following episodes for download'.format(tvserie=serie)
+print 'Episodes to download:'
+
+for serie in episodes:    
     for episode in episodes[serie]:
-        print '\t{episode}'.format(episode=episode)
+        print '\t{tvserie} {episode}'.format(tvserie=serie,episode=episode["number"])
+        #web.markEpisode(episode["id"])
 

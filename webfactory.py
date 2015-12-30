@@ -20,8 +20,8 @@ from traktv import *
 
 class webFactory:
     @staticmethod
-    def createWeb(web):
+    def createWeb(web,user,password):
         if web == "tvcalendar":
-            return tvCalendar()
+            return tvCalendar(user,password)
         elif web == "traktv":
-            return trakTV()
+            return trakTV(user,password)

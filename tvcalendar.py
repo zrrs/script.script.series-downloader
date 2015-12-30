@@ -16,19 +16,25 @@
 # import xbmcaddon
 # import xbmcvfs
 from web import *
-from mechanize import Browser
+import mechanize
+from mechanize import Browser, urlopen, Request
+import cookielib
+import urllib
 from BeautifulSoup import BeautifulSoup
 import re
 
 class tvCalendar(Web):
-    def __init__(self):
+    def __init__(self,user,password):
         self._urlBase = 'http://www.pogdesign.co.uk/cat/'
+        self._urlWacthed = self._urlBase+"watchhandle"
         self._browser = Browser()
+        self._cookieJar = cookielib.LWPCookieJar()
+        self._browser.set_cookiejar(self._cookieJar)
+        self._user = user
+        self._pass = password
+        self._doLogin()
         
-    def something(self,txt):
-        print 'trakTV: {text}'.format(text=txt)
-        
-    def getEpisodesForDownload(self):
+    def _doLogin(self):
         self._browser.open(self._urlBase)
 
         #In TVCalendar the are no name for the forms.
@@ -37,28 +43,44 @@ class tvCalendar(Web):
                 self._browser.form = form
                 break
                 
-        #TODO: to the config file.
         self._browser['username'] = self._user
         self._browser['password'] = self._pass
 
         #Submit de login form
-        resp = self._browser.submit()
+        self._browser.submit()
+    
+    def _toStandard(self,str):
+        strSplit = str.split()
+        season = strSplit[1].zfill(2)
+        episode = strSplit[4].zfill(2)
+        return "S"+season+"E"+episode
+        
+    def markEpisode(self,episode):
+        values = {"watched": "adding", "shid": episode} 
+        data = urllib.urlencode(values)                
+        req = Request(self._urlWacthed, " ")
+        req.add_header("User-Agent", "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.2.7) Gecko/20100713 Firefox/3.6.7")
+        req.add_header("Referer", self._urlBase)
+        req.add_data(data)
+        self._cookieJar.add_cookie_header(req)
+        res = urlopen(req)
 
+    def getEpisodesForDownload(self):        
         #Get the web page.
-        html = resp.read()
-
+        html = self._browser.response().read()
         #Scrapping the page.
         soup = BeautifulSoup(html)
-        div = soup.findAll("div", {"class":re.compile("ep t\d info")})
-        
-        episodes = {}
-        
+        div = soup.findAll("div", {"class":re.compile("ep t\d info")})        
+        episodes = {}       
         for episode in div:
+            if episode.label.input.has_key("checked"):
+                continue
+                
             links = episode.findAll('a')
             serieTitle = links[0].getText()
-            episodes[serieTitle] = []
-            episodes[serieTitle].append(links[1].getText())
-            #markCheck = episode.find('input')
-            #print markCheck.attrs        
+            if not episodes.has_key(serieTitle):
+                episodes[serieTitle] = []
+                
+            episodes[serieTitle].append({"number": self._toStandard(links[1].getText()), "id": episode.label.input["value"]})               
         
         return episodes

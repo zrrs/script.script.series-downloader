@@ -33,15 +33,9 @@ class Web:
         
     def getPass(self):
         return self._pass
-        
-    def setUser(self,user):
-        self._user = user
-        
-    def setPass(self,password):
-        self._pass = password
-
+     
     @abstractmethod
-    def something(self,txt): pass
+    def markEpisode(self,episode): pass
     
     @abstractmethod
     def getEpisodesForDownload(self): pass

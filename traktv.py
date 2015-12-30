@@ -21,8 +21,12 @@ from BeautifulSoup import BeautifulSoup
 import re
 
 class trakTV(Web):
-    def __init__(self):
+    def __init__(self,user,password):
         self._urlBase = 'http://trakt.tv/'
-        
-    def something(self,txt):
-        print 'trakTV: {text}'.format(text=txt)
+        self._user = user
+        self._pass = password
+
+    def getEpisodesForDownload(self): pass
+    
+    def markEpisode(self,episode): pass
+    
