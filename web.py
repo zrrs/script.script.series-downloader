@@ -38,4 +38,4 @@ class Web:
     def markEpisode(self,episode): pass
     
     @abstractmethod
-    def getEpisodesForDownload(self): pass
+    def getEpisodesForDownload(self,episodes,months): pass

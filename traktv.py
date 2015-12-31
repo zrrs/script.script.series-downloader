@@ -26,7 +26,7 @@ class trakTV(Web):
         self._user = user
         self._pass = password
 
-    def getEpisodesForDownload(self): pass
+    def getEpisodesForDownload(self,episodes,months): pass
     
     def markEpisode(self,episode): pass
     

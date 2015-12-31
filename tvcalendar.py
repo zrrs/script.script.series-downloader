@@ -65,13 +65,14 @@ class tvCalendar(Web):
         self._cookieJar.add_cookie_header(req)
         res = urlopen(req)
 
-    def getEpisodesForDownload(self):        
+    def getEpisodesForDownload(self,episodes,months):        
         #Get the web page.
         html = self._browser.response().read()
         #Scrapping the page.
         soup = BeautifulSoup(html)
+        div = soup.findAll("div",{"class": "prev-month"})
+        prevRef = div[0].a["href"].split("/")[-1]
         div = soup.findAll("div", {"class":re.compile("ep t\d info")})        
-        episodes = {}       
         for episode in div:
             if episode.label.input.has_key("checked"):
                 continue
@@ -81,6 +82,9 @@ class tvCalendar(Web):
             if not episodes.has_key(serieTitle):
                 episodes[serieTitle] = []
                 
-            episodes[serieTitle].append({"number": self._toStandard(links[1].getText()), "id": episode.label.input["value"]})               
-        
-        return episodes
+            episodes[serieTitle].append({"number": self._toStandard(links[1].getText()), "id": episode.label.input["value"]})  
+                
+        if months > 0:
+            print "voy a {0}".format(prevRef)
+            self._browser.open(self._urlBase+prevRef)
+            self.getEpisodesForDownload(episodes,months-1)
