@@ -15,7 +15,7 @@
 # import xbmcplugin
 # import xbmcaddon
 # import xbmcvfs
-from webfactory import *
+from web.webfactory import *
 import configparser
 import base64
 import datetime
