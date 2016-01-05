@@ -1,4 +1,15 @@
 [Web]
-selected_web=""
-user=""
-password=""
+selected_web = 
+user = 
+password = 
+
+[Torrent]
+selected_torrent = 
+language = 
+other_filters = 
+verified = 
+min_size =
+
+[Last]
+month = 
+

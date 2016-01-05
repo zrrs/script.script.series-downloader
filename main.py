@@ -16,6 +16,7 @@
 # import xbmcaddon
 # import xbmcvfs
 from web.webfactory import *
+from torrent.torrentfactory import *
 import configparser
 import base64
 import datetime
@@ -28,9 +29,21 @@ from dateutil import relativedelta
 config = configparser.ConfigParser()
 config.read('config.ini')
 
+#Calendar options
 selected_web = config.get("Web","selected_web")
 user = config.get("Web","user")
 password = base64.b64decode(config.get("Web","password"))
+#Torrent options
+selected_torrent = config.get("Torrent","selected_torrent")
+language = config.get("Torrent","language")
+otherFilters = config.get("Torrent","other_filters")
+otherFilters = ' OR '.join(x for x in otherFilters.split("|"))
+if config.get("Torrent","verified"):
+    verified = True
+else: 
+    verified = False
+minSize = config.get("Torrent","min_size")
+#Last execution
 lastMonth = config.get("Last","month")
 #We now update de month.
 actualDate = datetime.date.today()
@@ -49,14 +62,18 @@ if lastMonth:
     if r.years:
         months = months + 12
 
-#Creation of the web object and look for new episodes
+#Creation of the web object
 web =  webFactory.createWeb(selected_web,user,password)
+#Creation of the torrent object
+torrent = torrentFactory.createTorrent(selected_torrent,language,otherFilters,verified,minSize)
+#Look for new episodes
 episodes = {}
 web.getEpisodesForDownload(episodes,months)
 #Porcess of the new episodes.
 for serie in episodes:    
     for episode in episodes[serie]:
         print '{tvserie} {episode}'.format(tvserie=serie,episode=episode["number"])
+        torrent.episodeSearch(serie,episode)
         #If we have added it to the torrent client, mark as downloaded.
         #web.markEpisode(episode["id"])
 
