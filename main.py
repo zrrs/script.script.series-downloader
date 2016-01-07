@@ -61,6 +61,9 @@ if lastMonth:
         months = r.months
     if r.years:
         months = months + 12
+else:
+    #If this is the first execution we will also look in the previous month
+    months = 1
 
 #Creation of the web object
 web =  webFactory.createWeb(selected_web,user,password)
@@ -71,9 +74,13 @@ episodes = {}
 web.getEpisodesForDownload(episodes,months)
 #Porcess of the new episodes.
 for serie in episodes:    
+    print u"Title: ",serie
     for episode in episodes[serie]:
-        print '{tvserie} {episode}'.format(tvserie=serie,episode=episode["number"])
-        torrent.episodeSearch(serie,episode)
+        print u'\tEpisode {episode}'.format(episode=episode["number"])
+        episode["torrent"] = torrent.episodeSearch(serie,episode)
+        if episode["torrent"]:
+            print "\tMandar descargar : {torrent}".format(torrent=episode["torrent"])
+        else:
+            print "\tERROR: para este episodio no se han encontrado torrents que cumplan los filtros."
         #If we have added it to the torrent client, mark as downloaded.
         #web.markEpisode(episode["id"])
-

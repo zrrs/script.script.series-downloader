@@ -16,10 +16,9 @@
 # import xbmcaddon
 # import xbmcvfs
 from web import *
-import mechanize
 from mechanize import Browser, urlopen, Request
 import cookielib
-import urllib
+import urllib2
 from BeautifulSoup import BeautifulSoup
 import re
 import datetime
@@ -58,7 +57,7 @@ class tvCalendar(Web):
         
     def markEpisode(self,episode):
         values = {"watched": "adding", "shid": episode} 
-        data = urllib.urlencode(values)                
+        data = urllib2.urlencode(values)                
         req = Request(self._urlWacthed, " ")
         req.add_header("User-Agent", "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.2.7) Gecko/20100713 Firefox/3.6.7")
         req.add_header("Referer", self._urlBase)
@@ -92,5 +91,6 @@ class tvCalendar(Web):
                 episodes[serieTitle].append({"number": self._toStandard(links[1].getText()), "id": episode.label.input["value"]})  
                 
         if months > 0:
+            print "Voy a ",prevRef
             self._browser.open(self._urlBase+prevRef)
             self.getEpisodesForDownload(episodes,months-1)

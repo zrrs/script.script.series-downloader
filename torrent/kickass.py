@@ -18,8 +18,7 @@
 # import xbmcaddon
 # import xbmcvfs
 from torrent import *
-import mechanize
-from mechanize import Browser, Request
+from mechanize import Browser, HTTPError
 import cookielib
 import urllib
 #from BeautifulSoup import BeautifulSoup
@@ -60,25 +59,23 @@ class kickAss(Torrent):
         
     def episodeSearch(self,serie,episode):
         searchQuery = self._urlSearch.format(name=serie,episode=episode["number"])
-        print searchQuery
-        #resp = urllib.urlopen(searchQuery)
-        #print resp.code
-        #print resp.headers
-        #rss = resp.read()
-        #print rss
-        self._browser.open(searchQuery)
-        gzipContent = self._browser.response().read()
-        xml = gzip.GzipFile(fileobj=StringIO.StringIO(gzipContent)).read()
-        xmldoc = minidom.parseString(xml)
-        items = xmldoc.getElementsByTagName('item')
-        for item in items:
-            contentLength =  int(item.getElementsByTagName("torrent:contentLength")[0].firstChild.data)
-            if item.getElementsByTagName("torrent:contentLength")[0].firstChild.data < self._minSize:
-                continue
-            
-            magnetURI = item.getElementsByTagName("torrent:magnetURI")[0].firstChild.data
-            print magnetURI
-            break
+        try:
+            self._browser.open(searchQuery)
+            gzipContent = self._browser.response().read()
+            xml = gzip.GzipFile(fileobj=StringIO.StringIO(gzipContent)).read()
+            xmldoc = minidom.parseString(xml)
+            items = xmldoc.getElementsByTagName('item')
+            for item in items:
+                contentLength =  int(item.getElementsByTagName("torrent:contentLength")[0].firstChild.data)
+                if item.getElementsByTagName("torrent:contentLength")[0].firstChild.data < self._minSize:
+                    continue
+                
+                return item.getElementsByTagName("torrent:magnetURI")[0].firstChild.data
+                break
+                
+            return None
+        except HTTPError, e:
+            return None
         
             
         

@@ -28,6 +28,3 @@ class Torrent:
     
     @abstractmethod
     def episodeSearch(self,serie,episode): pass
-    
-    #@abstractmethod
-    #def getEpisodesForDownload(self,episodes,months): pass
