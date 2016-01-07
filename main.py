@@ -81,6 +81,6 @@ for serie in episodes:
         if episode["torrent"]:
             print "\tMandar descargar : {torrent}".format(torrent=episode["torrent"])
         else:
-            print "\tERROR: para este episodio no se han encontrado torrents que cumplan los filtros."
+            print "\tERROR: No torrents fo this episode."
         #If we have added it to the torrent client, mark as downloaded.
         #web.markEpisode(episode["id"])
