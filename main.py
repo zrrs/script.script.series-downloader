@@ -17,6 +17,7 @@
 # import xbmcvfs
 from web.webfactory import *
 from torrent.torrentfactory import *
+from downloader.downloaderfactory import *
 import configparser
 import base64
 import datetime
@@ -33,6 +34,7 @@ config.read('config.ini')
 selected_web = config.get("Web","selected_web")
 user = config.get("Web","user")
 password = base64.b64decode(config.get("Web","password"))
+
 #Torrent options
 selected_torrent = config.get("Torrent","selected_torrent")
 language = config.get("Torrent","language")
@@ -43,14 +45,19 @@ if config.get("Torrent","verified"):
 else: 
     verified = False
 minSize = config.get("Torrent","min_size")
+
+#Donwloader options
+app = config.get("Downloader","app")
+ip = config.get("Downloader","ip")
+downuser = config.get("Downloader","user")
+downpass = base64.b64decode(config.get("Downloader","password"))
+port = config.get("Downloader","port")
+
 #Last execution
 lastMonth = config.get("Last","month")
 #We now update de month.
 actualDate = datetime.date.today()
 config.set("Last","month",actualDate.strftime("%Y-%m"))
- #we save the new config.
-with open('config.ini', 'w') as configfile:    
-    config.write(configfile)
 
 #we need to know how many months since las execution to review all.
 months = 0
@@ -67,8 +74,13 @@ else:
 
 #Creation of the web object
 web =  webFactory.createWeb(selected_web,user,password)
+
 #Creation of the torrent object
 torrent = torrentFactory.createTorrent(selected_torrent,language,otherFilters,verified,minSize)
+
+#Creation of the downloader object
+downloader = downloaderFactory.createDownloader(app,ip,downuser,downpass,port)
+
 #Look for new episodes
 episodes = {}
 web.getEpisodesForDownload(episodes,months)
@@ -80,7 +92,12 @@ for serie in episodes:
         episode["torrent"] = torrent.episodeSearch(serie,episode)
         if episode["torrent"]:
             print "\tMandar descargar : {torrent}".format(torrent=episode["torrent"])
+            if downloader.download(episode):  
+                print "\tTORRENT ID: {id}".format(id=episode["torrentid"])
+                web.markEpisode(episode["id"])
         else:
             print "\tERROR: No torrents fo this episode."
-        #If we have added it to the torrent client, mark as downloaded.
-        #web.markEpisode(episode["id"])
+            
+#we save the new config.
+with open('config.ini', 'w') as configfile:    
+    config.write(configfile)
