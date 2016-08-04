@@ -16,11 +16,21 @@
 # import xbmcaddon
 # import xbmcvfs
 from kickass import *
+from tpb import *
+from t1337x import *
+from lime import *
 
 class torrentFactory:
     @staticmethod
-    def createTorrent(torrent,language,otherFilters,verified,minSize):
+    def createTorrent(torrent, language, otherFilters, verified, minSize, debug):
         if torrent == "kickass":
-            return kickAss(language,otherFilters,verified,minSize)
-        #elif web == "thepiratebay":
-            #return trakTV(user,password)
+            return kickAss(language, ' OR '.join(x for x in otherFilters.split("|")), verified, minSize, debug)
+            
+        if torrent == "tpb":
+            return TPB(otherFilters.split('|')[0], minSize, debug)
+            
+        if torrent == "t1337x":
+            return T1337x(otherFilters.split('|')[0], minSize, debug)
+            
+        if torrent == "lime":
+            return Lime(otherFilters.split('|')[0], minSize, debug)

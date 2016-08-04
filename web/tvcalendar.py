@@ -23,11 +23,14 @@ import urllib
 from BeautifulSoup import BeautifulSoup
 import re
 import datetime
+import logging
+logging.getLogger('')
 
 class tvCalendar(Web):
     def __init__(self,user,password):
-        self._urlBase = 'http://www.pogdesign.co.uk/cat/'
-        self._urlWacthed = self._urlBase+"watchhandle"
+        self._urlBase = 'https://www.pogdesign.co.uk/cat/login'
+        self._urlWacthed = 'https://www.pogdesign.co.uk/cat/watchhandle'
+        self._urlMonths = 'https://www.pogdesign.co.uk/cat/'
         self._browser = Browser()
         self._cookieJar = cookielib.LWPCookieJar()
         self._browser.set_cookiejar(self._cookieJar)
@@ -44,9 +47,9 @@ class tvCalendar(Web):
                 self._browser.form = form
                 break
                 
-        self._browser['username'] = self._user
-        self._browser['password'] = self._pass
-
+        self._browser.form['username'] = self._user
+        self._browser.form['password'] = self._pass
+        self._browser.form.action = 'https://www.pogdesign.co.uk/cat/login'
         #Submit de login form
         self._browser.submit()
     
@@ -71,27 +74,25 @@ class tvCalendar(Web):
         html = self._browser.response().read()
         #Scrapping the page.
         soup = BeautifulSoup(html)
-        div = soup.findAll("div",{"class": "prev-month"})
-        prevRef = div[0].a["href"].split("/")[-1]
-        td = soup.findAll("td", {"id":re.compile("d_\d{1,2}_\d{1,2}_\d{1,4}")})        
+        td = soup.findAll("div", {"id":re.compile("d_\d{1,2}_\d{1,2}_\d{1,4}")})        
         today = datetime.datetime.today().date()
         for day in td:
             if (datetime.datetime.strptime(day["id"],"d_%d_%m_%Y").date()>=today):
                 continue
             
-            div = day.findAll("div", {"class":re.compile("ep t\d info")})        
+            div = day.findAll("div", {"class":re.compile("ep info(?!c).*")})        
             for episode in div:
-                if episode.label.input.has_key("checked"):
-                    continue
-                    
                 links = episode.findAll('a')
                 serieTitle = links[0].getText()
                 if not episodes.has_key(serieTitle):
                     episodes[serieTitle] = []
                     
-                episodes[serieTitle].append({"number": self._toStandard(links[1].getText()), "id": episode.label.input["value"]})  
+                #episodes[serieTitle].append({"number": self._toStandard(links[1].getText()), "id": episode.span.input["value"]})  
+                episodes[serieTitle].append({"number": links[1].getText(), "id": episode.span.input["value"]})  
                 
         if months > 0:
-            print "Voy a ",prevRef
-            self._browser.open(self._urlBase+prevRef)
+            div = soup.findAll("div",{"class": "prev-month"})
+            prevRef = div[0].a["href"].split("/")[-1]
+            logging.info(u"Going to {}".format(prevRef))
+            self._browser.open(self._urlMonths+prevRef)
             self.getEpisodesForDownload(episodes,months-1)

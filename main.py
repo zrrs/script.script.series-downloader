@@ -18,33 +18,63 @@
 from web.webfactory import *
 from torrent.torrentfactory import *
 from downloader.downloaderfactory import *
+
 import configparser
 import base64
 import datetime
+import logging
+import time
+from os import path
 #pip install python-dateutil
 from dateutil import relativedelta
+
 
 #----------------------------------------------------------------------
 # Loading config
 #----------------------------------------------------------------------
+FILELOG = path.join(path.dirname(path.realpath(__file__)),'log','seriesDownloader-{fecha}.log').format(fecha=time.strftime('%Y-%m-%d'))
+
 config = configparser.ConfigParser()
 config.read('config.ini')
 
+#Debug mode
+DEBUGLEVEL = logging.INFO
+debug = False
+if config.get("Debug","debug"):
+    DEBUGLEVEL = logging.DEBUG
+    debug = True        
+    
+    
+#Prepare log file.
+logging.basicConfig(
+    filename = FILELOG,
+    format = '%(asctime)-12s;%(process)-5d;%(filename)-15s:%(levelname)-6s;%(message)s',
+    level = DEBUGLEVEL,
+    )
+
+console = logging.StreamHandler()
+console.setLevel(DEBUGLEVEL)
+formatter = logging.Formatter('%(asctime)-12s;%(process)-5d;%(filename)-15s:%(levelname)-6s;%(message)s')
+console.setFormatter(formatter)
+logging.getLogger('').addHandler(console)
+
+logging.debug(u"In mode DEBUG. The config file wont be update.")
+    
 #Calendar options
 selected_web = config.get("Web","selected_web")
 user = config.get("Web","user")
 password = base64.b64decode(config.get("Web","password"))
 
 #Torrent options
-selected_torrent = config.get("Torrent","selected_torrent")
+selected_torrents = config.get("Torrent","selected_torrent").split(',')
 language = config.get("Torrent","language")
+minSize = config.get("Torrent","min_size")
 otherFilters = config.get("Torrent","other_filters")
-otherFilters = ' OR '.join(x for x in otherFilters.split("|"))
 if config.get("Torrent","verified"):
     verified = True
+    
 else: 
     verified = False
-minSize = config.get("Torrent","min_size")
 
 #Donwloader options
 app = config.get("Downloader","app")
@@ -57,7 +87,8 @@ port = config.get("Downloader","port")
 lastMonth = config.get("Last","month")
 #We now update de month.
 actualDate = datetime.date.today()
-config.set("Last","month",actualDate.strftime("%Y-%m"))
+if not debug:
+    config.set("Last","month",actualDate.strftime("%Y-%m"))
 
 #we need to know how many months since las execution to review all.
 months = 0
@@ -76,7 +107,12 @@ else:
 web =  webFactory.createWeb(selected_web,user,password)
 
 #Creation of the torrent object
-torrent = torrentFactory.createTorrent(selected_torrent,language,otherFilters,verified,minSize)
+torrentsList = []
+for selected_torrent in selected_torrents:
+    logging.debug(u"New torrent object: {}".format(selected_torrent))
+        
+    torrent = torrentFactory.createTorrent(selected_torrent, language, otherFilters, verified, minSize, debug)
+    torrentsList.append(torrent)
 
 #Creation of the downloader object
 downloader = downloaderFactory.createDownloader(app,ip,downuser,downpass,port)
@@ -86,18 +122,24 @@ episodes = {}
 web.getEpisodesForDownload(episodes,months)
 #Porcess of the new episodes.
 for serie in episodes:    
-    print u"Title: ",serie
+    logging.info(u"Title: {}".format(serie))
     for episode in episodes[serie]:
-        print u'\tEpisode {episode}'.format(episode=episode["number"])
-        episode["torrent"] = torrent.episodeSearch(serie,episode)
-        if episode["torrent"]:
-            print "\tMandar descargar : {torrent}".format(torrent=episode["torrent"])
-            if downloader.download(episode):  
-                print "\tTORRENT ID: {id}".format(id=episode["torrentid"])
-                web.markEpisode(episode["id"])
-        else:
-            print "\tERROR: No torrents fo this episode."
+        logging.info(u'Episode {episode}'.format(episode=episode["number"]))
+        for torrent in torrentsList:
+            logging.debug(u"Using: {}".format(torrent.getUrlBase()))
+            episode["torrent"] = torrent.episodeSearch(serie,episode)
+            if episode["torrent"]:
+                logging.debug(u"Mandar descargar : {torrent}".format(torrent=episode["torrent"]))
+                if not debug:
+                    if downloader.download(episode):  
+                        logging.info(u"TORRENT ID: {id}".format(id=episode["torrentid"]))
+                        web.markEpisode(episode["id"])
+                break
+                        
+            else:
+                logging.error("ERROR: No torrents for this episode in {}.".format(torrent.getUrlBase()))
             
 #we save the new config.
-with open('config.ini', 'w') as configfile:    
-    config.write(configfile)
+if not debug:
+    with open('config.ini', 'w') as configfile:    
+        config.write(configfile)

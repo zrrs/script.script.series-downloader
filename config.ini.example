@@ -10,6 +10,13 @@ other_filters =
 verified = 
 min_size =
 
+[Downloader]
+app =
+ip =
+user =
+password =
+port =
+
 [Last]
 month = 
 
