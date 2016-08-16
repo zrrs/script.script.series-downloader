@@ -17,11 +17,14 @@
 # import xbmcvfs
 from tvcalendar import *
 from traktv import *
+from csvfile import *
 
 class webFactory:
     @staticmethod
-    def createWeb(web,user,password):
+    def createWeb(web, user, password, filePath):
         if web == "tvcalendar":
-            return tvCalendar(user,password)
+            return tvCalendar(user, password)
         elif web == "traktv":
-            return trakTV(user,password)
+            return trakTV(user, password)
+        elif web == "csvfile":
+            return csvFile(filePath)

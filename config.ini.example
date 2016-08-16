@@ -2,6 +2,7 @@
 selected_web = 
 user = 
 password = 
+filepath = 
 
 [Torrent]
 selected_torrent = 

@@ -40,7 +40,7 @@ config.read('config.ini')
 #Debug mode
 DEBUGLEVEL = logging.INFO
 debug = False
-if config.get("Debug","debug"):
+if int(config.get("Debug","debug")) == 1:
     DEBUGLEVEL = logging.DEBUG
     debug = True        
     
@@ -64,6 +64,7 @@ logging.debug(u"In mode DEBUG. The config file wont be update.")
 selected_web = config.get("Web","selected_web")
 user = config.get("Web","user")
 password = base64.b64decode(config.get("Web","password"))
+filePath = base64.b64decode(config.get("Web","filepath"))
 
 #Torrent options
 selected_torrents = config.get("Torrent","selected_torrent").split(',')
@@ -104,7 +105,7 @@ else:
     months = 1
 
 #Creation of the web object
-web =  webFactory.createWeb(selected_web,user,password)
+web =  webFactory.createWeb(selected_web, user, password, filePath)
 
 #Creation of the torrent object
 torrentsList = []
@@ -134,6 +135,9 @@ for serie in episodes:
                     if downloader.download(episode):  
                         logging.info(u"TORRENT ID: {id}".format(id=episode["torrentid"]))
                         web.markEpisode(episode["id"])
+                        
+                    else:
+                        logging.error(u"No se puso a descargar: {} {}".format(serie, episode["number"]))
                 break
                         
             else:
