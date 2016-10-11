@@ -60,7 +60,13 @@ class TPB(Torrent):
             html = gzip.GzipFile(fileobj=StringIO.StringIO(gzipContent)).read()
             #Scrapping the page.
             soup = BeautifulSoup(html)
-            items = soup.find('table',id="searchResult").findAll('tr')
+            try:
+                items = soup.find('table',id="searchResult").findAll('tr')
+            
+            except AttributeError:
+                logging.error(u"There wasn't results for: {} MB".format(searchQuery))
+                return None
+                
             #We skip the first tr because is the header. (no tbody in html).
             for item in items[1:]:
                 contentLength =  item.find("font" ,{"class": "detDesc"}).text.split(',')[1].split('&nbsp;')[0].split()[1]                     

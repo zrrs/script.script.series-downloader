@@ -61,6 +61,10 @@ class Lime(Torrent):
             html = gzip.GzipFile(fileobj=StringIO.StringIO(gzipContent)).read()
             #Scrapping the page.
             soup = BeautifulSoup(html)
+            if (soup.body.findAll(text='No results found')):
+                logging.error(u"There wasn't results for: {} MB".format(searchQuery))
+                return None
+                
             items = soup.findAll('table', {"class": "table2"})[1].findAll('tr')
             #We skip the first tr because is the header. (no tbody in html).
             for item in items[1:]:

@@ -61,6 +61,10 @@ class T1337x(Torrent):
             html = gzip.GzipFile(fileobj=StringIO.StringIO(gzipContent)).read()
             #Scrapping the page.
             soup = BeautifulSoup(html)
+            if (soup.body.findAll(text='Error')):
+                logging.error(u"There wasn't results for: {} MB".format(searchQuery))
+                return None
+                
             items = soup.find('ul', {"class": "clearfix"}).findAll('li')
             for item in items:
                 contentLength =  item.find("div" ,{"class": "coll-4"}).find('span').text.split(' ')[0]
