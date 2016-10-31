@@ -71,6 +71,7 @@ class kickAss(Torrent):
             for item in items:
                 contentLength =  int(item.getElementsByTagName("torrent:contentLength")[0].firstChild.data)
                 if item.getElementsByTagName("torrent:contentLength")[0].firstChild.data < self._minSize:
+                    logging.warning(u"Torrent to small: {}".format(contentLength))
                     continue
                 
                 return item.getElementsByTagName("torrent:magnetURI")[0].firstChild.data

@@ -64,18 +64,21 @@ class TPB(Torrent):
                 items = soup.find('table',id="searchResult").findAll('tr')
             
             except AttributeError:
-                logging.error(u"There wasn't results for: {} MB".format(searchQuery))
+                logging.error(u"There wasn't results for: {}".format(searchQuery))
                 return None
                 
             #We skip the first tr because is the header. (no tbody in html).
             for item in items[1:]:
-                contentLength =  item.find("font" ,{"class": "detDesc"}).text.split(',')[1].split('&nbsp;')[0].split()[1]                     
-                if contentLength < self._minSize:
+                contentLength =  item.find("font" ,{"class": "detDesc"}).text.split(',')[1].replace('&nbsp;',' ').strip().split(' ')[1:]
+                logging.debug(u"contentLength: {}".format(contentLength))
+                logging.debug(u"minSize: {}".format(self._minSize))
+                if contentLength[1][:3] != 'GiB' and float(contentLength[0]) < self._minSize:
+                    logging.warning(u"Torrent to small: {}".format(' '.join([contentLength[0], contentLength[1] [:3]])))
                     continue
                 
                 magnetUri = item.findAll('a', {"title": "Download this torrent using magnet"})[0]['href']
                 logging.info(u"Going to download: {}".format( item.find("a" ,{"class": "detLink"}).text))
-                logging.info(u"File size: {} MB".format(contentLength))
+                logging.info(u"File size: {}".format(' '.join([contentLength[0], contentLength[1] [:3]])))
                 return magnetUri
                 break
                 

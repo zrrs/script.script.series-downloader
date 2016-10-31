@@ -63,13 +63,14 @@ class T1337x(Torrent):
             #Scrapping the page.
             soup = BeautifulSoup(html)
             if (soup.body.findAll(text=' No results were returned. ')):
-                logging.error(u"There wasn't results for: {} MB".format(searchQuery))
+                logging.error(u"There wasn't results for: {}".format(searchQuery))
                 return None
                 
             items = soup.find('div', attrs={"class": "table-list-wrap"}).find('tbody').findAll('tr')
             for item in items:
                 contentLength =  item.find("td" ,{"class": re.compile("coll-4.*")}).text.split(' ')
-                if contentLength[1] != 'GB' and contentLength[0] < self._minSize:
+                if contentLength[1][:2] != 'GB' and float(contentLength[0]) < self._minSize:
+                    logging.warning(u"Torrent to small: {}".format(' '.join([contentLength[0], contentLength[1] [:2]])))
                     continue
                 
                 infoUrl = item.find("td", attrs={"class": re.compile("coll-1.*")}).findAll('a')[1]['href']

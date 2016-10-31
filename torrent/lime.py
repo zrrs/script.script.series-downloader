@@ -62,7 +62,7 @@ class Lime(Torrent):
             #Scrapping the page.
             soup = BeautifulSoup(html)
             if (soup.body.findAll(text='No results found')):
-                logging.error(u"There wasn't results for: {} MB".format(searchQuery))
+                logging.error(u"There wasn't results for: {}".format(searchQuery))
                 return None
                 
             items = soup.findAll('table', {"class": "table2"})[1].findAll('tr')
@@ -70,15 +70,16 @@ class Lime(Torrent):
             for item in items[1:]:
                 #print item
                 #print item.findAll("td" ,{"class": "tdnormal"})
-                contentLength =  item.findAll("td" ,{"class": "tdnormal"})[1].text.split(' ')[0]
-                if contentLength < self._minSize:
+                contentLength =  item.findAll("td" ,{"class": "tdnormal"})[1].text.split(' ')
+                if contentLength[1][:2] != 'GB' and float(contentLength[0]) < self._minSize:
+                    logging.warning(u"Torrent to small: {}".format(' '.join([contentLength[0], contentLength[1] [:2]])))
                     continue
                 
                 linkA = item.find("div",{"class": "tt-name"}).findAll("a")[1]
                 infoUrl = linkA['href']
                 name = linkA.text
                 logging.info(u"Going to download: {}".format(name))
-                logging.info(u"File size: {} MB".format(contentLength))
+                logging.info(u"File size: {}".format(' '.join([contentLength[0], contentLength[1] [:2]])))
                 self._browser.open(''.join([self._urlBase, infoUrl]) )
                 gzipContent = self._browser.response().read()
                 html = gzip.GzipFile(fileobj=StringIO.StringIO(gzipContent)).read()
