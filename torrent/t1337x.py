@@ -26,6 +26,7 @@ from xml.dom import minidom
 import gzip
 import StringIO
 import logging
+import re
 logging.getLogger('')
 
 
@@ -61,24 +62,24 @@ class T1337x(Torrent):
             html = gzip.GzipFile(fileobj=StringIO.StringIO(gzipContent)).read()
             #Scrapping the page.
             soup = BeautifulSoup(html)
-            if (soup.body.findAll(text='Error')):
+            if (soup.body.findAll(text=' No results were returned. ')):
                 logging.error(u"There wasn't results for: {} MB".format(searchQuery))
                 return None
                 
-            items = soup.find('ul', {"class": "clearfix"}).findAll('li')
+            items = soup.find('div', attrs={"class": "table-list-wrap"}).find('tbody').findAll('tr')
             for item in items:
-                contentLength =  item.find("div" ,{"class": "coll-4"}).find('span').text.split(' ')[0]
-                if contentLength < self._minSize:
+                contentLength =  item.find("td" ,{"class": re.compile("coll-4.*")}).text.split(' ')
+                if contentLength[1] != 'GB' and contentLength[0] < self._minSize:
                     continue
                 
-                infoUrl = item.find("div",{"class": "coll-1"}).find("strong").find('a')['href']
+                infoUrl = item.find("td", attrs={"class": re.compile("coll-1.*")}).findAll('a')[1]['href']
                 logging.info(u"Going to download: {}".format(infoUrl.split('/')[-1]))
-                logging.info(u"File size: {} MB".format(contentLength))
+                logging.info(u"File size: {}".format(' '.join([contentLength[0], contentLength[1] [:2]])))
                 self._browser.open(''.join([self._urlBase, infoUrl]) )
                 gzipContent = self._browser.response().read()
                 html = gzip.GzipFile(fileobj=StringIO.StringIO(gzipContent)).read()
                 soup2 = BeautifulSoup(html)
-                magnetUri = soup2.find('a', id='magnetdl')['href']
+                magnetUri = soup2.find('a', attrs={"class": re.compile(".*btn-magnet")})['href']
                 return magnetUri
                 break
                 
