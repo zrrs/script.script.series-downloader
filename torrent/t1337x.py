@@ -80,12 +80,18 @@ class T1337x(Torrent):
                 gzipContent = self._browser.response().read()
                 html = gzip.GzipFile(fileobj=StringIO.StringIO(gzipContent)).read()
                 soup2 = BeautifulSoup(html)
-                magnetUri = soup2.find('a', attrs={"class": re.compile(".*btn-magnet")})['href']
+                magnetUri = soup2.find('a', attrs={"href": re.compile("^magnet:.*")})['href']
                 return magnetUri
                 break
                 
             return None
+            
         except HTTPError, e:
             logging.error( u"There was an error in the URL {}.".format(searchQuery))
+            return None
+            
+        except Exception as e:
+            logging.error(u"There was an error:")
+            logging.exception(e)
             return None
             
