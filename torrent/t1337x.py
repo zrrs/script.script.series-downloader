@@ -69,7 +69,7 @@ class T1337x(Torrent):
             items = soup.find('div', attrs={"class": "table-list-wrap"}).find('tbody').findAll('tr')
             for item in items:
                 contentLength =  item.find("td" ,{"class": re.compile("coll-4.*")}).text.split(' ')
-                if contentLength[1][:2] != 'GB' and float(contentLength[0]) < self._minSize:
+                if contentLength[1][:2] != 'GB' and float(contentLength[0].replace(",","")) < self._minSize:
                     logging.warning(u"Torrent to small: {}".format(' '.join([contentLength[0], contentLength[1] [:2]])))
                     continue
                 
